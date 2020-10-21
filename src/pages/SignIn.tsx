@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useCallback } from 'react';
 import {
   Grid,
   Card,
@@ -7,13 +7,14 @@ import {
   Button,
   InputAdornment,
 } from '@material-ui/core';
-import { makeStyles, useTheme } from '@material-ui/core/styles';
+import { useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Person, Lock } from '@material-ui/icons/';
-
+import NumberFormat from 'react-number-format';
+import { AuthContext } from '../context/AuthContext';
 import background from '../assets/signin-background.jpg';
 
 const schema = yup.object().shape({
@@ -27,14 +28,25 @@ const schema = yup.object().shape({
     .min(6, 'A senha deve conter no mínimo 8 dígitos'),
 });
 
+// interface SignInFormData {
+//   enrollment: string;
+//   password: string;
+// }
+
 const SignIn: React.FC = () => {
+  const { signIn } = useContext(AuthContext);
   const theme = useTheme();
   const matchesXS = useMediaQuery(theme.breakpoints.down('xs'));
   const { register, handleSubmit, errors } = useForm({
     resolver: yupResolver(schema),
   });
+
   return (
-    <form onSubmit={handleSubmit(data => alert(JSON.stringify(data)))}>
+    <form
+      onSubmit={handleSubmit(data =>
+        signIn({ enrollment: data.enrollment, password: data.password }),
+      )}
+    >
       <Grid
         container
         style={{
@@ -50,12 +62,15 @@ const SignIn: React.FC = () => {
             <CardContent>
               <Grid container direction="column" spacing={3}>
                 <Grid item>
-                  <TextField
-                    label="Matrícula"
+                  <NumberFormat
+                    label="Matricula"
+                    customInput={TextField}
                     name="enrollment"
                     inputRef={register}
-                    error={errors.enrollment && true}
+                    type="text"
                     helperText={errors.enrollment?.message}
+                    error={errors.enrollment && true}
+                    isNumericString
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
