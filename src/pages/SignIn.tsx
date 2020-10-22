@@ -28,13 +28,10 @@ const schema = yup.object().shape({
     .min(6, 'A senha deve conter no mínimo 8 dígitos'),
 });
 
-// interface SignInFormData {
-//   enrollment: string;
-//   password: string;
-// }
-
 const SignIn: React.FC = () => {
-  const { signIn } = useContext(AuthContext);
+  const { signIn, user } = useContext(AuthContext);
+
+  console.log(user);
   const theme = useTheme();
   const matchesXS = useMediaQuery(theme.breakpoints.down('xs'));
   const { register, handleSubmit, errors } = useForm({
