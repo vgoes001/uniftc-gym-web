@@ -1,7 +1,7 @@
 import React from 'react';
 import SignIn from './pages/SignIn';
 import Dashboard from './pages/Dashboard';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './hooks/AuthContext';
 
 const App: React.FC = () => (
   <>

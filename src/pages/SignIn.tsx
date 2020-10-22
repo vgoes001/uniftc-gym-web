@@ -14,7 +14,7 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Person, Lock } from '@material-ui/icons/';
 import NumberFormat from 'react-number-format';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/AuthContext';
 import background from '../assets/signin-background.jpg';
 
 const schema = yup.object().shape({
