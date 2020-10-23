@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Grid,
   Card,
@@ -14,8 +14,15 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Person, Lock } from '@material-ui/icons/';
 import NumberFormat from 'react-number-format';
+import Snackbar from '@material-ui/core/Snackbar';
 import { useAuth } from '../hooks/AuthContext';
 import background from '../assets/signin-background.jpg';
+
+interface alertProps {
+  open: boolean;
+  message: string;
+  backgroundColor: string;
+}
 
 const schema = yup.object().shape({
   enrollment: yup
@@ -30,19 +37,47 @@ const schema = yup.object().shape({
 
 const SignIn: React.FC = () => {
   const { signIn } = useAuth();
+  const [alert, setAlert] = useState({
+    open: false,
+    message: '',
+    backgroundColor: '',
+  });
 
   const theme = useTheme();
   const matchesXS = useMediaQuery(theme.breakpoints.down('xs'));
   const { register, handleSubmit, errors } = useForm({
     resolver: yupResolver(schema),
   });
-
   return (
     <form
-      onSubmit={handleSubmit(data =>
-        signIn({ enrollment: data.enrollment, password: data.password }),
-      )}
+      onSubmit={handleSubmit(data => {
+        signIn({ enrollment: data.enrollment, password: data.password }).then(
+          response => {
+            if (response) {
+              setAlert({
+                open: true,
+                message: 'Login efetuado com sucesso!',
+                backgroundColor: '#4BB543',
+              });
+            } else {
+              setAlert({
+                open: true,
+                message: 'Falha na autenticação, tente novamente!',
+                backgroundColor: '#FF3232',
+              });
+            }
+          },
+        );
+      })}
     >
+      <Snackbar
+        open={alert.open}
+        message={alert.message}
+        ContentProps={{ style: { backgroundColor: alert.backgroundColor } }}
+        anchorOrigin={{ horizontal: 'center', vertical: 'top' }}
+        onClose={() => setAlert({ ...alert, open: false })}
+        autoHideDuration={4000}
+      />
       <Grid
         container
         style={{

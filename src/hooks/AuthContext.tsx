@@ -13,7 +13,7 @@ interface AuthState {
 
 interface AuthContextData {
   user: object;
-  signIn(data: SignInCredentials): Promise<void>;
+  signIn(data: SignInCredentials): Promise<boolean>;
   signOut(): void;
 }
 
@@ -30,18 +30,26 @@ export const AuthProvider: React.FC = ({ children }) => {
 
     return {} as AuthState;
   });
-  const signIn = useCallback(async ({ enrollment, password }) => {
-    const response = await api.post('sessions', {
-      enrollment,
-      password,
-    });
-    const { token, user } = response.data;
+  async function signIn({
+    enrollment,
+    password,
+  }: SignInCredentials): Promise<boolean> {
+    const response = await api
+      .post('sessions', {
+        enrollment,
+        password,
+      })
+      .catch(() => false);
+    if (typeof response === 'boolean') return response;
 
+    const { token, user } = response.data;
     localStorage.setItem('@GoBarber:token', token);
     localStorage.setItem('@GoBarber:user', JSON.stringify(user));
 
     setData({ token, user });
-  }, []);
+
+    return true;
+  }
 
   const signOut = useCallback(() => {
     localStorage.removeItem('@GoBarber:token');
