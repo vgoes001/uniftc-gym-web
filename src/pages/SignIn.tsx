@@ -11,6 +11,7 @@ import { useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
+
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Person, Lock } from '@material-ui/icons/';
 import NumberFormat from 'react-number-format';
@@ -53,13 +54,7 @@ const SignIn: React.FC = () => {
       onSubmit={handleSubmit(data => {
         signIn({ enrollment: data.enrollment, password: data.password }).then(
           response => {
-            if (response) {
-              setAlert({
-                open: true,
-                message: 'Login efetuado com sucesso!',
-                backgroundColor: '#4BB543',
-              });
-            } else {
+            if (!response) {
               setAlert({
                 open: true,
                 message: 'Falha na autenticação, tente novamente!',
