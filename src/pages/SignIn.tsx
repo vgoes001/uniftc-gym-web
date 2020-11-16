@@ -33,7 +33,7 @@ const schema = yup.object().shape({
   password: yup
     .string()
     .required('A senha é obrigatória')
-    .min(6, 'A senha deve conter no mínimo 8 dígitos'),
+    .min(6, 'A senha deve conter no mínimo 6 dígitos'),
 });
 
 const SignIn: React.FC = () => {
