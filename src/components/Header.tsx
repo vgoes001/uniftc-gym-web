@@ -5,6 +5,7 @@ import useScrollTrigger from '@material-ui/core/useScrollTrigger';
 import { makeStyles, Typography, IconButton } from '@material-ui/core';
 import { PowerSettingsNew } from '@material-ui/icons';
 import { useAuth } from '../hooks/AuthContext';
+import logo from '../assets/logo.png';
 
 interface Props {
   children: React.ReactElement;
@@ -55,14 +56,16 @@ const Header: React.FC = () => {
   return (
     <>
       <ElevationScroll>
-        <AppBar position="fixed">
+        <AppBar position="fixed" color="default">
           <Toolbar>
+            <img src={logo} alt="UniFTC logo" />
             <Typography className={classes.typographPosition}>
               Olá,
-              {user.name}
+              {'  '}
+              <strong>{user.name}</strong>
             </Typography>
             <IconButton onClick={handleSingOut}>
-              <PowerSettingsNew />
+              <PowerSettingsNew color="primary" />
             </IconButton>
           </Toolbar>
         </AppBar>
