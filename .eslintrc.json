@@ -31,6 +31,7 @@
   "rules": {
     "react/prop-types": "off",
     "prettier/prettier": "error",
+    "import/no-duplicates": "off",
     "react/jsx-props-no-spreading": "off",
     "no-use-before-define": "off",
     "react-hooks/rules-of-hooks": "error",

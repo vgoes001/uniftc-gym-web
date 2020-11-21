@@ -1,14 +1,27 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Button, Card, CardContent, Grid, Typography } from '@material-ui/core';
+import {
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  Hidden,
+  IconButton,
+  Typography,
+} from '@material-ui/core';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
+import ptBR from 'date-fns/locale/pt-BR';
 
-import { parseISO, format } from 'date-fns';
+import { parseISO, format, addDays, isBefore, isAfter } from 'date-fns';
 
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import Alert from '@material-ui/lab/Alert';
 import Snackbar from '@material-ui/core/Snackbar';
 
-import { QueryBuilder } from '@material-ui/icons';
+import {
+  QueryBuilder,
+  ArrowForwardIos,
+  ArrowBackIos,
+} from '@material-ui/icons';
 import api from '../services/api';
 import Header from '../components/Header';
 import StudentCard from '../components/StudentCard';
@@ -102,7 +115,7 @@ const Dashboard: React.FC = () => {
   const matchesMD = useMediaQuery(theme.breakpoints.down('md'));
 
   const [alert, setAlert] = useState({ open: false, message: '' });
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [availability, setAvailability] = useState<AvailabilityProps[]>([]);
   const [appointments, setAppointments] = useState<Appointments[]>([]);
 
@@ -110,27 +123,36 @@ const Dashboard: React.FC = () => {
     api
       .get('/availability', {
         params: {
-          year: currentMonth.getFullYear(),
-          month: currentMonth.getMonth() + 1,
-          day: currentMonth.getDate(),
+          year: selectedDate.getFullYear(),
+          month: selectedDate.getMonth() + 1,
+          day: selectedDate.getDate(),
         },
       })
       .then(response => {
         setAvailability(response.data);
       });
-  }, [currentMonth]);
+  }, [selectedDate]);
 
   useEffect(() => {
     api
       .get('/appointments', {
         params: {
-          year: currentMonth.getFullYear(),
-          month: currentMonth.getMonth() + 1,
-          day: currentMonth.getDate(),
+          year: selectedDate.getFullYear(),
+          month: selectedDate.getMonth() + 1,
+          day: selectedDate.getDate(),
         },
       })
       .then(response => setAppointments(response.data));
-  }, [currentMonth]);
+  }, [selectedDate]);
+
+  const incrementDate = useCallback(() => {
+    setSelectedDate(addDays(selectedDate, 1));
+  }, [selectedDate]);
+
+  const decrementDate = useCallback(() => {
+    setSelectedDate(addDays(selectedDate, -1));
+  }, [selectedDate]);
+
   const handleAppointment = useCallback(
     async hour => {
       try {
@@ -152,6 +174,25 @@ const Dashboard: React.FC = () => {
     [appointments],
   );
 
+  const isDateBefore = useMemo(() => {
+    const today = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      new Date().getDate(),
+    );
+    const selectedOnlyDate = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+    );
+
+    return isBefore(selectedOnlyDate, addDays(today, 1));
+  }, [selectedDate]);
+
+  const formattedDate = useMemo(
+    () => format(selectedDate, "dd 'de' MMMM',' yyyy", { locale: ptBR }),
+    [selectedDate],
+  );
   return (
     <>
       <Header />
@@ -171,12 +212,40 @@ const Dashboard: React.FC = () => {
 
       <Grid container justify="center" alignItems="center">
         <Grid item className={classes.mainContainer} sm={8} xl={9} xs={10}>
+          <Grid
+            container
+            justify="center"
+            alignItems="center"
+            style={{ marginTop: '2em' }}
+          >
+            {!isDateBefore && (
+              <Grid item>
+                <IconButton onClick={decrementDate} disabled={isDateBefore}>
+                  <ArrowBackIos color="primary" />
+                </IconButton>
+              </Grid>
+            )}
+
+            <Grid item>
+              <Typography>{formattedDate}</Typography>
+            </Grid>
+
+            <Grid item>
+              <IconButton onClick={incrementDate}>
+                <ArrowForwardIos color="primary" />
+              </IconButton>
+            </Grid>
+          </Grid>
+
+          <Grid container>
+            <Grid item />
+          </Grid>
           <Grid item>
             {availability.map(appointmentContainer => {
-              const formattedDate = new Date();
-              const year = formattedDate.getFullYear();
-              const month = formattedDate.getMonth();
-              const day = formattedDate.getDate();
+              const parsedDate = new Date();
+              const year = parsedDate.getFullYear();
+              const month = parsedDate.getMonth();
+              const day = parsedDate.getDate();
               const { hour } = appointmentContainer;
               const formattedHour = format(
                 new Date(year, month, day, Number(hour)),
@@ -247,7 +316,8 @@ const Dashboard: React.FC = () => {
                         disabled={!appointmentContainer.available}
                         className={classes.scheduleButton}
                         onClick={() =>
-                          handleAppointment(appointmentContainer.hour)}
+                          handleAppointment(appointmentContainer.hour)
+                        }
                       >
                         Agendar
                       </Button>
