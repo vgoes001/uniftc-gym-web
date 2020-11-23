@@ -8,6 +8,7 @@ interface SignInCredentials {
 
 interface UserData {
   name: string;
+  id: string;
 }
 
 interface AuthState {
