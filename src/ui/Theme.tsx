@@ -12,5 +12,4 @@ export default createMuiTheme({
       main: mainBlue,
     },
   },
-  typography: {},
 });

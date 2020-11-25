@@ -5,15 +5,15 @@ import {
   Card,
   CardContent,
   Grid,
-  Hidden,
   IconButton,
   Typography,
   Dialog,
   DialogContent,
   FormGroup,
   FormControlLabel,
-  Switch,
   Checkbox,
+  Avatar,
+  Tooltip,
 } from '@material-ui/core';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import ptBR from 'date-fns/locale/pt-BR';
@@ -22,13 +22,10 @@ import {
   parseISO,
   format,
   addDays,
-  isBefore,
-  isAfter,
-  setHours,
-  setMinutes,
-  setSeconds,
   isSameDay,
   isSameHour,
+  setHours,
+  isBefore,
 } from 'date-fns';
 
 import useMediaQuery from '@material-ui/core/useMediaQuery';
@@ -41,6 +38,7 @@ import {
   ArrowBackIos,
 } from '@material-ui/icons';
 import { useForm } from 'react-hook-form';
+import { withStyles } from '@material-ui/styles';
 import bodyWeightIcon from '../assets/gym/001-body-weight.svg';
 import ringsIcon from '../assets/gym/005-rings.svg';
 import dumbbellIcon from '../assets/gym/008-dumbbell-3.svg';
@@ -53,7 +51,6 @@ import gymBallIcon from '../assets/gym/046-gym-ball.svg';
 import { useAuth } from '../hooks/AuthContext';
 import api from '../services/api';
 import Header from '../components/Header';
-import StudentCard from '../components/StudentCard';
 
 interface AvailabilityProps {
   hour: string;
@@ -65,7 +62,13 @@ type User = {
   name: string;
   userId: string;
   course: string;
+  genre: string;
   enrollment: string;
+};
+
+type Equipment = {
+  id: string;
+  name: string;
 };
 
 interface Appointments {
@@ -73,6 +76,10 @@ interface Appointments {
   user: User;
   id: string;
   user_id: string;
+  appointment_equipments: Array<{
+    appointment_id: string;
+    equipment: Equipment;
+  }>;
 }
 
 interface IEquipments {
@@ -136,18 +143,9 @@ const useStyles = makeStyles(theme => ({
   },
   trainingNow: {
     position: 'relative',
-    backgroundColor: '#f4ede8',
+    backgroundColor: theme.palette.grey[200],
     padding: '10px',
     borderRadius: '10px',
-    // '&::before': {
-    //   position: 'absolute',
-    //   height: '80%',
-    //   width: '1px',
-    //   left: 0,
-    //   content: '""',
-    //   top: '10%',
-    //   background: '#ff9000',
-    // },
   },
   scheduleButton: {
     borderRadius: 50,
@@ -174,10 +172,17 @@ const useStyles = makeStyles(theme => ({
   },
   clientsContainer: {
     marginTop: '0.75em',
+    maxHeight: '200px',
+    backgroundColor: theme.palette.grey[100],
+    padding: '10px',
+    borderRadius: '10px',
+    overflow: 'scroll',
+    '&::-webkit-scrollbar': {
+      display: 'none',
+    },
   },
   ClientCard: {
     marginRight: '2em',
-    marginTop: '2em',
     '&:hover': {
       cursor: 'pointer',
     },
@@ -314,6 +319,41 @@ const Dashboard: React.FC = () => {
         open: true,
         message: 'Agendamento realizado com sucesso',
         severity: 'success',
+      });
+
+      setCheckBoxState({
+        bodyWeight: {
+          isChecked: false,
+          id: '645c626a-57ed-4bf1-80c8-533e89356c10',
+        },
+        rings: {
+          isChecked: false,
+          id: '4299cb9b-50b7-4a63-9a30-8cd08c79aa5a',
+        },
+        dumbbell: {
+          isChecked: false,
+          id: '8e12605d-f38f-4cea-becd-2243e2cb728d',
+        },
+        machine: {
+          isChecked: false,
+          id: '07f465bf-dff8-44d4-a6fe-2f587c2dda65',
+        },
+        treadmill: {
+          isChecked: false,
+          id: '28c27709-9560-49f2-9802-4fdd3aedf002',
+        },
+        bench: {
+          isChecked: false,
+          id: '4ee40f12-e816-4b9f-afa4-0c67fe90da0e',
+        },
+        bycicle: {
+          isChecked: false,
+          id: '2a8e7cef-1217-4f38-99d4-b457dddc7f30',
+        },
+        ball: {
+          isChecked: false,
+          id: '78c2506d-3554-4719-a6e0-d226b6c7d8ba',
+        },
       });
 
       setOpen(false);
@@ -714,7 +754,12 @@ const Dashboard: React.FC = () => {
                       </Button>
                     </Grid>
                   </Grid>
-                  <Grid item container className={classes.clientsContainer}>
+                  <Grid
+                    item
+                    container
+                    className={classes.clientsContainer}
+                    spacing={2}
+                  >
                     {appointments.filter(
                       app =>
                         JSON.stringify(parseISO(app.date).getHours()) ===
@@ -731,30 +776,48 @@ const Dashboard: React.FC = () => {
                           JSON.stringify(appointmentContainer.hour),
                       )
                       .map(appointment => (
-                        <Grid
-                          item
+                        <Tooltip
                           key={appointment.id}
-                          xs={12}
-                          md={4}
-                          className={classes.ClientCard}
+                          title={appointment.appointment_equipments
+                            .filter(
+                              eqp => eqp.appointment_id === appointment.id,
+                            )
+                            .map(eqpName => eqpName.equipment.name)
+                            .join(' | ')}
                         >
-                          <Card>
-                            <CardContent>
-                              <Typography
-                                variant="h2"
-                                className={classes.ClientName}
-                              >
-                                {appointment.user.name}
-                              </Typography>
-                              <Typography className={classes.ClientInfo}>
-                                {appointment.user.course}
-                              </Typography>
-                              <Typography className={classes.ClientInfo}>
-                                {appointment.user.enrollment}
-                              </Typography>
-                            </CardContent>
-                          </Card>
-                        </Grid>
+                          <Grid item className={classes.ClientCard}>
+                            <Card>
+                              <CardContent>
+                                <Grid
+                                  container
+                                  justify="space-between"
+                                  alignItems="center"
+                                >
+                                  <Grid item style={{ marginRight: '20px' }}>
+                                    <Avatar
+                                      alt={appointment.user.name}
+                                      src={`https://avatars.dicebear.com/api/${appointment.user.genre}/${appointment.user_id}.svg`}
+                                    />
+                                  </Grid>
+                                  <Grid item>
+                                    <Typography
+                                      variant="h2"
+                                      className={classes.ClientName}
+                                    >
+                                      {appointment.user.name}
+                                    </Typography>
+                                    <Typography className={classes.ClientInfo}>
+                                      {appointment.user.course}
+                                    </Typography>
+                                    <Typography className={classes.ClientInfo}>
+                                      {appointment.user.enrollment}
+                                    </Typography>
+                                  </Grid>
+                                </Grid>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        </Tooltip>
                       ))}
                   </Grid>
                 </Grid>
